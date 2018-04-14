@@ -73,13 +73,13 @@ const Canvas = (props) => {
       <CurrentScore score={props.gameState.kills} />
         { ! props.gameState.started &&
         <g>
-        <StartGame onClick={() => props.startGame()} />
-        <Title />
-       <Leaderboard 
-       currentPlayer={props.currentPlayer}
-       authenticate={signIn}
-       leaderboard={props.players}
-       />
+          { props.currentPlayer != null && <StartGame onClick={() => props.startGame()} />}
+          <Title />
+          <Leaderboard 
+            currentPlayer={props.currentPlayer}
+            authenticate={signIn}
+            leaderboard={props.players}
+          />
         </g>
         }
         {
@@ -125,12 +125,12 @@ Canvas.propTypes = {
     name: PropTypes.string.isRequired,
     picture: PropTypes.string.isRequired,
   })),
-  shoot: PropTypes.func.isRequired,
+  shoot: PropTypes.func.isRequired
 };
 
 Canvas.defaultProps = {
   currentPlayer: null,
-  players: null,
+  players: null
 };
 
 export default Canvas;
