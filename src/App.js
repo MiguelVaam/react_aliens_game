@@ -1,10 +1,11 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { getCanvasPosition } from './utils/formulas';
 import Canvas from './components/canvas';
 import * as Auth0 from 'auth0-web';
 import io from 'socket.io-client';
 
+//The config function to config the auth0-web pck with my client properties
 Auth0.configure({
   domain: 'migvf-game.auth0.com',
   clientID: 'LqFuKyS7v2qXokb5OUVArf4MvZ1PKtBc',
@@ -13,14 +14,15 @@ Auth0.configure({
   scope: 'openid profile manage:points',
   audience: 'https://migvf-react-aliens-game.com'
 });
-
 class App extends Component {
-
   constructor(props) {
     super(props);
     this.shoot = this.shoot.bind(this);
+    this.socket = null;
+    this.currentPlayer = null;
   }
-
+  //Start the uniform interval that will trigger the moveObjects action.
+  //The trackMouse refers to a relative position inside your canvas.
   componentDidMount() {
     const self = this;
 
@@ -29,45 +31,32 @@ class App extends Component {
     Auth0.subscribe((auth) => {
       if (!auth) return;
 
-      const playerProfile = Auth0.getProfile();
-      const currentPlayer = {
-        id: playerProfile.sub,
+      self.playerProfile = Auth0.getProfile();
+      self.currentPlayer = {
+        id: self.playerProfile.sub,
         maxScore: 0,
-        name: playerProfile.name,
-        picture: playerProfile.picture,
+        name: self.playerProfile.name,
+        picture: self.playerProfile.picture,
       };
 
-      this.props.loggedIn(currentPlayer);
+      this.props.loggedIn(self.currentPlayer);
 
-      const socket = io('http://localhost:3001', {
+      self.socket = io('http://localhost:3001', {
         query: `token=${Auth0.getAccessToken()}`,
       });
 
-      let emitted = false;
-      socket.on('players', (players) => {
+      self.socket.on('players', (players) => {
         this.props.leaderboardLoaded(players);
-
-        if (emitted) return;
-        socket.emit('new-max-score', {
-          id: playerProfile.sub,
-          maxScore: 120,
-          name: playerProfile.name,
-          picture: playerProfile.picture,
+        players.forEach((player) => {
+          if (player.id === self.currentPlayer.id) {
+            self.currentPlayer.maxScore = player.maxScore;
+          }
         });
-        emitted = true;
-        setTimeout(() => {
-          socket.emit('new-max-score', {
-            id: playerProfile.sub,
-            maxScore: 222,
-            name: playerProfile.name,
-            picture: playerProfile.picture,
-          });
-        }, 5000);
       });
     });
 
     setInterval(() => {
-        self.props.moveObjects(self.canvasMousePosition);
+      self.props.moveObjects(self.canvasMousePosition);
     }, 10);
 
     window.onresize = () => {
@@ -76,6 +65,18 @@ class App extends Component {
       cnv.style.height = `${window.innerHeight}px`;
     };
     window.onresize();
+  }
+  //To check if players have reached a new maxScore. If so, the game emits a new-max-score 
+  //event to update the leaderboard.
+  componentWillReceiveProps(nextProps) {
+    if (!nextProps.gameState.started && this.props.gameState.started) {
+      if (this.currentPlayer.maxScore < this.props.gameState.kills) {
+        this.socket.emit('new-max-score', {
+          ...this.currentPlayer,
+          maxScore: this.props.gameState.kills,
+        });
+      }
+    }
   }
 
   trackMouse(event) {
@@ -108,15 +109,17 @@ App.propTypes = {
     kills: PropTypes.number.isRequired,
     lives: PropTypes.number.isRequired,
     flyingObjects: PropTypes.arrayOf(PropTypes.shape({
-      position: PropTypes.shape({
-        x: PropTypes.number.isRequired,
-        y: PropTypes.number.isRequired
-      }).isRequired,
-      id: PropTypes.number.isRequired,
-    })).isRequired
+    position: PropTypes.shape({
+      x: PropTypes.number.isRequired,
+      y: PropTypes.number.isRequired
+    }).isRequired,
+    id: PropTypes.number.isRequired,
+  })).isRequired,
   }).isRequired,
+  
   moveObjects: PropTypes.func.isRequired,
   startGame: PropTypes.func.isRequired,
+
   currentPlayer: PropTypes.shape({
     id: PropTypes.string.isRequired,
     maxScore: PropTypes.number.isRequired,
@@ -138,5 +141,7 @@ App.defaultProps = {
   currentPlayer: null,
   players: null
 };
+
+
 
 export default App;
