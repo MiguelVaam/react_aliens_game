@@ -61,12 +61,12 @@ const Title = () => {
       </defs>
       <text {...textStyle}>
         <textPath xlinkHref="#AliensPath">
-          Aliens,
+          Aliens 
         </textPath>
       </text>
       <text {...textStyle}>
         <textPath xlinkHref="#GoHomePath">
-          Go Home!
+          invasion!
         </textPath>
       </text>
     </g>

@@ -10,3 +10,9 @@ Try to be the best of all players and be the first in the leaderboard!!
 - Socket IO
 - Express
 - Auth0 (For logging, for securing backend Api to update max scores,etc)
+
+## How to play ? 
+
+- First of all: You need node installed in your computer
+- Go to the project root and launch server in the background: **node ./server/index &**
+- In the project root run the app: **npm start**
