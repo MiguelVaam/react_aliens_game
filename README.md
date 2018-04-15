@@ -9,7 +9,9 @@ Try to be the best of all players and be the first in the leaderboard!!
 - Svg
 - Socket IO
 - Express
-- Auth0 (For logging, for securing backend Api to update max scores,etc)
+- Auth0: 
+  - Auth0 client for manage sign up and log in
+  - Secured Backend Api for manage updates of users scores
 
 ## How to play ? 
 
